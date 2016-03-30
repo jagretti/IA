@@ -72,12 +72,19 @@ def tinyMazeSearch(problem):
 def search(problem, fringe):
     initial_state = problem.getStartState()
     initial_actions = []
-    initial_candidate = (initial_state, initial_actions)
+    initial_candidate = (initial_state, initial_actions, 0)
     fringe.push(initial_candidate)
     closed_set = set()
     while not fringe.isEmpty():
         candidate = fringe.pop()
-        state, actions = candidate
+        state, actions, cost = candidate
+        '''
+        print 'Now:', candidate
+        print 'Is it a goal?', problem.isGoalState(state)
+        print "Successors:", problem.getSuccessors(state)
+        print "Actions: ",actions
+        
+        '''
         if problem.isGoalState(state):
             return actions
         if state not in closed_set:
@@ -85,10 +92,12 @@ def search(problem, fringe):
             candidate_successors = problem.getSuccessors(state)
             candidate_successors = filter(lambda x: x[0] not in closed_set,
                                           candidate_successors)
-            candidate_successors = map(lambda x: (x[0], actions + [x[1]]),
+            candidate_successors = map(lambda x: (x[0], actions + [x[1]], x[2]+cost),
                                        candidate_successors)
             for candidate in candidate_successors:
                 fringe.push(candidate)
+    print "There's no solution!"
+    return []
 
 def depthFirstSearch(problem):
     '''
@@ -104,6 +113,7 @@ def depthFirstSearch(problem):
     > print 'Is the start a goal?', problem.isGoalState(problem.getStartState())
     > print "Start's successors:", problem.getSuccessors(problem.getStartState())
     '''
+    '''
     initial_state = problem.getStartState()
     initial_actions = []
     initial_candidate = (initial_state, initial_actions)
@@ -115,13 +125,6 @@ def depthFirstSearch(problem):
         if candidate in visited:
             continue
         visited.add(candidate)
-        '''
-        print 'Now:', candidate
-        print 'Is it a goal?', problem.isGoalState(candidate)
-        print "Successors:", problem.getSuccessors(candidate)
-        print "Actions: ",actions
-        print ""
-        '''
         if problem.isGoalState(candidate):
             return actions
         else:
@@ -129,15 +132,21 @@ def depthFirstSearch(problem):
             for (pos,move,cost) in otros:
                 next = (pos, actions + [move])
                 stack.push(next)
+    print "There's no solution!"
     return []
+    '''
+    return search(problem,util.Stack())
         
 
 def breadthFirstSearch(problem):
     '''Search the shallowest nodes in the search tree first.'''
+    return search(problem,util.Queue())
 
-def uniformCostSearch(problem):
+def uniformCostSearch(problem): # COMO CARAJO PONGO QUE SEA MaS BARATO DONDE HAY COMIDA Y MaS CARO DONE HAY FANTASMAS??? TODO
     '''Search the node of least total cost first.'''
-
+    queue = util.PriorityQueueWithFunction(lambda x: x[2])
+    return search(problem,queue)
+    
 def nullHeuristic(state, problem=None):
     '''
     A heuristic function estimates the cost from the current state to the nearest
@@ -149,7 +158,10 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     '''
     Search the node that has the lowest combined cost and heuristic first.
     '''
-
+    queue = util.PriorityQueueWithFunction(lambda x: x[2]+heuristic(x[0],problem))
+    return search(problem,queue)
+    
+    
 # Abbreviations
 bfs = breadthFirstSearch
 dfs = depthFirstSearch
