@@ -277,17 +277,29 @@ class CornersProblem(search.SearchProblem):
         self._expanded = 0 # Number of search nodes expanded
 
         "*** YOUR CODE HERE ***"
-        self.startState = set()
+        self.cornersPos = dict()
+        i=0
+        for c in self.corners:
+            self.cornersPos[c] = i
+            i = i+1
+            
+        flags = (False,False,False,False)
+        if self.startingPosition in self.corners:
+            flagsl = list(flags)
+            flagsl[self.cornersPos[pos]] = True
+            self.startState = ( tuple(flagsl) , self.startingPosition )
+        else:
+            self.startState = ( flags , self.startingPosition )
 
     def getStartState(self):
         "Returns the start state (in your state space, not the full Pacman state space)"
         "*** YOUR CODE HERE ***"
-        self.startState
+        return self.startState
 
     def isGoalState(self, state):
         "Returns whether this search state is a goal state of the problem"
         "*** YOUR CODE HERE ***"
-        # return len(state) == len(self.corners)
+        return min(state[0])
 
     def getSuccessors(self, state):
         """
@@ -305,12 +317,19 @@ class CornersProblem(search.SearchProblem):
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
             # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
-
+            x,y = state[1]
+            dx,dy = Actions.directionToVector(action)
+            nextx,nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
             "*** YOUR CODE HERE ***"
+            pos = (nextx,nexty)
+            if not hitsWall:
+                if pos in self.corners:
+                    flagsl = list(state[0])
+                    flagsl[self.cornersPos[pos]] = True
+                    successors.append(( (tuple(flagsl),pos), action, 1 ))
+                else:
+                    successors.append(( (state[0],pos), action, 1 ))
 
         self._expanded += 1
         return successors
@@ -327,7 +346,7 @@ class CornersProblem(search.SearchProblem):
             x, y = int(x + dx), int(y + dy)
             if self.walls[x][y]: return 999999
         return len(actions)
-
+        
 
 def cornersHeuristic(state, problem):
     """

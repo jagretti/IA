@@ -83,7 +83,6 @@ def search(problem, fringe):
         print 'Is it a goal?', problem.isGoalState(state)
         print "Successors:", problem.getSuccessors(state)
         print "Actions: ",actions
-        
         '''
         if problem.isGoalState(state):
             return actions
