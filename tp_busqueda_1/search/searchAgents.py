@@ -277,19 +277,10 @@ class CornersProblem(search.SearchProblem):
         self._expanded = 0 # Number of search nodes expanded
 
         "*** YOUR CODE HERE ***"
-        self.cornersPos = dict()
-        i=0
-        for c in self.corners:
-            self.cornersPos[c] = i
-            i = i+1
-            
-        flags = (False,False,False,False)
         if self.startingPosition in self.corners:
-            flagsl = list(flags)
-            flagsl[self.cornersPos[pos]] = True
-            self.startState = ( tuple(flagsl) , self.startingPosition )
+            self.startState = ( frozenset([self.startingPosition]) , self.startingPosition )
         else:
-            self.startState = ( flags , self.startingPosition )
+            self.startState = ( frozenset() , self.startingPosition )
 
     def getStartState(self):
         "Returns the start state (in your state space, not the full Pacman state space)"
@@ -299,7 +290,7 @@ class CornersProblem(search.SearchProblem):
     def isGoalState(self, state):
         "Returns whether this search state is a goal state of the problem"
         "*** YOUR CODE HERE ***"
-        return min(state[0])
+        return len(state[0]) == len(self.corners)
 
     def getSuccessors(self, state):
         """
@@ -325,9 +316,8 @@ class CornersProblem(search.SearchProblem):
             pos = (nextx,nexty)
             if not hitsWall:
                 if pos in self.corners:
-                    flagsl = list(state[0])
-                    flagsl[self.cornersPos[pos]] = True
-                    successors.append(( (tuple(flagsl),pos), action, 1 ))
+                    newflags = state[0] | frozenset([pos])
+                    successors.append(( (newflags,pos), action, 1 ))
                 else:
                     successors.append(( (state[0],pos), action, 1 ))
 
@@ -348,6 +338,12 @@ class CornersProblem(search.SearchProblem):
         return len(actions)
         
 
+def manhattanDistance(position, corner):
+    "The Manhattan distance between two positions"
+    xy1 = position
+    xy2 = corner
+    return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -365,7 +361,22 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    cornersleft = set(corners) - state[0]
+    pos = state[1]
+    rta = 0
+    while len(cornersleft) > 0:
+        mindist = -1
+        mincorner = (-1,-1)
+        for corner in cornersleft:
+            dist = manhattanDistance(pos,corner)
+            if dist < mindist or mindist < 0:
+                mindist = dist
+                mincorner = corner
+        pos = mincorner
+        rta = rta + mindist
+        cornersleft = cornersleft - set([pos])
+    
+    return rta
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
